@@ -150,5 +150,29 @@ export default {
       });
     });
 
+    //测试后门
+    mock.onGet('/backdoor/info').reply(config => {
+      let info = 'going to do http get';
+
+        axios.get("http://localhost:9411/backdoor/info").then(function (response) {
+            console.log(response);
+            info = response;
+        }).catch((error) => {
+            info = error.message;
+            console.log(error.message);
+            console.log(error.code); // Not always specified
+            console.log(error.config); // The config that was used to make the request
+            console.log(error.response); // Only available if response was received from the server
+        });
+
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve([200, {
+                    msg : info
+                }]);
+            }, 500);
+        });
+    });
+
   }
 };

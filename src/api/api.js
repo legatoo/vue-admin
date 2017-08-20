@@ -1,17 +1,40 @@
 import axios from 'axios';
 
-let base = '';
+import {LoginUsers} from './data/user';
 
-export const requestLogin = params => { return axios.post(`${base}/login`, params).then(res => res.data); };
+function login(username, password) {
+    return new Promise((resolve, reject) => {
+        let user = null;
+        setTimeout(() => {
+            let hasUser = LoginUsers.some(u => {
+                if (u.username === username && u.password === password) {
+                    user = JSON.parse(JSON.stringify(u));
+                    user.password = undefined;
+                    return true;
+                }
+            });
 
-export const getUserList = params => { return axios.get(`${base}/user/list`, { params: params }); };
+            if (hasUser) {
+                resolve([200, {code: 200, msg: '请求成功', user}]);
+            } else {
+                resolve([200, {code: 500, msg: '账号或密码错误'}]);
+            }
+        }, 1000);
+    }).then(res => res[1]);
+}
 
-export const getUserListPage = params => { return axios.get(`${base}/user/listpage`, { params: params }); };
+function searchAppointments(param) {
+    return axios.post(`http://localhost:9411/api/tob/v1/appointment/search`, param);
+}
 
-export const removeUser = params => { return axios.get(`${base}/user/remove`, { params: params }); };
+function markAppointmentDone(appointmentId) {
+    let url = 'http://localhost:9411/api/tob/v1/appointment/markdone?appointmentId=' + appointmentId + '&toStatus=1';
+    console.warn("mark done -->", url);
+    return axios.post(url);
+}
 
-export const batchRemoveUser = params => { return axios.get(`${base}/user/batchremove`, { params: params }); };
+function backdoor() {
+    return axios.get(`http://localhost:9411/backdoor/info`);
+}
 
-export const editUser = params => { return axios.get(`${base}/user/edit`, { params: params }); };
-
-export const addUser = params => { return axios.get(`${base}/user/add`, { params: params }); };
+export {login, backdoor, searchAppointments, markAppointmentDone}
