@@ -15,13 +15,11 @@
         <!--列表-->
         <el-table :data="appointments" highlight-current-row v-loading="listLoading" @selection-change="selsChange"
                   style="width: 100%;">
-            <el-table-column type="selection" width="55">
-            </el-table-column>
             <el-table-column prop="id" label="预约ID" width="100" sortable>
             </el-table-column>
             <el-table-column prop="customerName" label="姓名" width="120" sortable>
             </el-table-column>
-            <el-table-column prop="sex" label="性别" width="100" sortable>
+            <el-table-column prop="gender" label="性别" :formatter="formatGender" width="100" sortable>
             </el-table-column>
             <el-table-column prop="contactMobile" label="电话" width="140" sortable>
             </el-table-column>
@@ -42,6 +40,12 @@
                 </template>
             </el-table-column>
         </el-table>
+
+        <!--工具条-->
+        <el-col :span="24" class="toolbar">
+            <el-pagination layout="prev, pager, next" @current-change="handleCurrentChange" :page-size="30" :total="total" style="float:right;">
+            </el-pagination>
+        </el-col>
 
     </section>
 </template>
@@ -72,27 +76,37 @@
             formatStatus: function (row, column) {
                 return row.status === 0 ? '未处理' : row.status === 1 ? '已处理' : '未知';
             },
+            formatGender: function (row, column) {
+                return row.gender === 0 ? '女士' : row.gender === 1 ? '先生' : '未知';
+            },
             showButton: function (row, column) {
-                console.log("row " + row+ " column is " + column.status);
                 return column.status === 0;
+            },
+            handleCurrentChange(val) {
+                this.page = val;
+                console.log("page --> ", this.page);
+                this.getAppointments();
             },
             //获取用户列表
             getAppointments() {
                 let para = {
-                    mobile: this.filters.mobile
+                    mobile: this.filters.mobile,
+                    pageNum : this.page
                 };
                 this.listLoading = true;
                 //NProgress.start();
                 searchAppointments(para).then((response) => {
-                    let {code, data} = response.data;
+                    let {code, data, length} = response.data;
 
                     if (code !== "SUCCESS") {
                         console.error("got error when querying appointments" + code)
                     }
                     this.appointments = data;
+                    this.total = length;
                     this.listLoading = false;
 
                     console.warn("got new appointments --> ", this.appointments);
+                    console.warn("total size --> ", this.total);
                 });
             },
             //标记处理完成
