@@ -4,10 +4,23 @@
         <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
             <el-form :inline="true" :model="filters">
                 <el-form-item>
-                    <el-input v-model="filters.mobile" placeholder="手机"></el-input>
+                    <el-input v-model="filters.mobile" >
+                        <template slot="prepend">手机</template>
+                    </el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-date-picker v-model="filters.fromDay" placeholder="从">
+                    </el-date-picker>
+                </el-form-item>
+                <el-form-item>
+                    <el-date-picker v-model="filters.toDay" placeholder="到">
+                    </el-date-picker>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" v-on:click="getAppointments">查询</el-button>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="warning" @click="handleAdd">新增预约单</el-button>
                 </el-form-item>
             </el-form>
         </el-col>
@@ -23,29 +36,74 @@
             </el-table-column>
             <el-table-column prop="contactMobile" label="电话" width="140" sortable>
             </el-table-column>
-            <el-table-column prop="address" label="地址" width="180" sortable>
+            <el-table-column prop="address" label="地址" width="250" sortable>
+            </el-table-column>
+            <el-table-column prop="appointmentDay" label="预约日" :formatter="formatDateLong" width="120" sortable>
+            </el-table-column>
+            <el-table-column prop="hourRange" label="预约时间" width="120" sortable>
             </el-table-column>
             <el-table-column prop="status" label="状态" :formatter="formatStatus" width="100" sortable>
             </el-table-column>
-            <el-table-column prop="appointmentTime" label="预约时间" :formatter="formatDateLong" width="120" sortable>
-            </el-table-column>
-            <el-table-column label="操作" width="150">
+            <el-table-column label="操作" width="180">
                 <template scope="scope">
                     <template v-if="showButton(scope.$index, scope.row)">
-                        <el-button type="danger" size="small" @click="markDone(scope.$index, scope.row)">处理</el-button>
+                        <el-button type="warning" size="small" @click="markDone(scope.$index, scope.row)">处理</el-button>
                     </template>
                     <template v-else>
                         <el-button type="success" size="small">已完成</el-button>
                     </template>
+                    <el-button type="danger" size="small" @click="deleteAppoint(scope.$index, scope.row)">删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
 
         <!--工具条-->
         <el-col :span="24" class="toolbar">
-            <el-pagination layout="prev, pager, next" @current-change="handleCurrentChange" :page-size="30" :total="total" style="float:right;">
+            <el-pagination layout="prev, pager, next" @current-change="handleCurrentChange" :page-size="30"
+                           :total="total" style="float:right;">
             </el-pagination>
         </el-col>
+
+        <!--新增界面-->
+        <el-dialog title="新增预约单" v-model="addFormVisible" :close-on-click-modal="false">
+            <el-form :model="addForm" label-width="80px" :rules="addFormRules" ref="addForm">
+                <el-form-item label="姓名" prop="customerName">
+                    <el-input v-model="addForm.customerName" auto-complete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="性别">
+                    <el-radio-group v-model="addForm.gender">
+                        <el-radio class="radio" :label="1">男</el-radio>
+                        <el-radio class="radio" :label="0">女</el-radio>
+                    </el-radio-group>
+                </el-form-item>
+                <el-form-item label="电话">
+                    <el-input v-model="addForm.customerMobile" placeholder="手机或座机"></el-input>
+                </el-form-item>
+                <el-form-item label="地址">
+                    <el-input type="textarea" v-model="addForm.address"></el-input>
+                </el-form-item>
+                <el-form-item label="预约日">
+                    <el-date-picker v-model="addForm.appointmentDay" type="date" format="yyyy-MM-dd"
+                                    placeholder="选择日期"></el-date-picker>
+                </el-form-item>
+                <el-form-item label="预约时间">
+                    <el-time-select
+                            placeholder="起始时间"
+                            v-model="addForm.startHour"
+                            :picker-options="{start: '08:00',step: '00:15',end: '20:00'}">
+                    </el-time-select>
+                    <el-time-select
+                            placeholder="结束时间"
+                            v-model="addForm.endHour"
+                            :picker-options="{start: '08:30',step: '00:15',end: '21:00',minTime: addForm.startHour}">
+                    </el-time-select>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click.native="addFormVisible = false">取消</el-button>
+                <el-button type="primary" @click.native="addSubmit" :loading="addLoading">提交</el-button>
+            </div>
+        </el-dialog>
 
     </section>
 </template>
@@ -53,25 +111,45 @@
 <script>
     import util from '../../common/js/util'
     //import NProgress from 'nprogress'
-    import {searchAppointments, markAppointmentDone} from '../../api/api';
+    import {searchAppointments, markAppointmentDone, deleteAppointmentById} from '../../api/api';
 
     export default {
         data() {
             return {
                 filters: {
-                    mobile: ''
+                    mobile: '',
+                    fromDay: '',
+                    toDay:''
                 },
                 appointments: [],
                 total: 0,
                 page: 1,
                 listLoading: false,
                 sels: [],//列表选中列
+
+                addFormVisible: false,//新增界面是否显示
+                addLoading: false,
+                //新增界面数据
+                addForm: {
+                    customerName: '',
+                    gender: 0,
+                    customerMobile: '',
+                    address: '',
+                    appointmentDay: '',
+                    startHour :'',
+                    endHour:''
+                },
+                addFormRules: {
+                    customerName: [
+                        {required: true, message: '请输入姓名', trigger: 'blur'}
+                    ]
+                },
             }
         },
         methods: {
             formatDateLong: function (row, column) {
-                let appointmentDate = new Date(row.appointmentTime);
-                return appointmentDate.toLocaleDateString();
+                let appointmentDate = new Date(row.appointmentDay);
+                return appointmentDate.toISOString().split('T')[0]
             },
             formatStatus: function (row, column) {
                 return row.status === 0 ? '未处理' : row.status === 1 ? '已处理' : '未知';
@@ -87,11 +165,26 @@
                 console.log("page --> ", this.page);
                 this.getAppointments();
             },
+            //显示新增界面
+            handleAdd: function () {
+                this.addFormVisible = true;
+                this.addForm = {
+                    customerName: '',
+                    gender: 0,
+                    customerMobile: '',
+                    address: '',
+                    appointmentDay: '',
+                    startHour :'',
+                    endHour:''
+                };
+            },
             //获取用户列表
             getAppointments() {
                 let para = {
                     mobile: this.filters.mobile,
-                    pageNum : this.page
+                    fromDay: new Date(this.filters.fromDay).getTime(),
+                    toDay: new Date(this.filters.toDay).getTime(),
+                    pageNum: this.page
                 };
                 this.listLoading = true;
                 //NProgress.start();
@@ -127,7 +220,7 @@
                             });
                         } else {
                             this.$message({
-                                message: '删除失败',
+                                message: '处理失败',
                                 type: 'failure'
                             });
                         }
@@ -137,6 +230,48 @@
                     });
                 }).catch(() => {
 
+                });
+            },
+            deleteAppoint:function(index, row){
+                this.$confirm('确认删除这条预约单?', '提示', {
+                    type:'warning'
+                }).then(() => {
+                    this.listLoading = true;
+
+                    deleteAppointmentById(row.id).then((response) => {
+                        let {code, data} = response.data;
+                        console.log("delete appointment got result code" + code);
+
+                        if (code === "SUCCESS") {
+                            this.$message({
+                                message: '处理成功',
+                                type: 'success'
+                            });
+                        } else {
+                            this.$message({
+                                message: '删除失败',
+                                type: 'failure'
+                            });
+                        }
+                        this.listLoading = false;
+                        //NProgress.done();
+                        this.getAppointments();
+                    })
+                })
+            },
+            //新增
+            addSubmit: function () {
+                this.$refs.addForm.validate((valid) => {
+                    if (valid) {
+                        this.$confirm('确认提交吗？', '提示', {}).then(() => {
+                            this.addLoading = true;
+                            //NProgress.start();
+                            let para = Object.assign({}, this.addForm);
+                            para.appointmentTime = (!para.appointmentTime || para.appointmentTime === '') ? '' : util.formatDate.format(new Date(para.appointmentTime), 'yyyy-MM-dd');
+
+                            console.log("going to submit new appointment", para)
+                        });
+                    }
                 });
             },
 
