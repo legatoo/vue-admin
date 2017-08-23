@@ -24,30 +24,26 @@
                 </el-form-item>
             </el-form>
         </el-col>
-
+        <el-col :span="15" class="toolbar" style="width: 100%;">共 {{total}} 条数据</el-col>
         <!--列表-->
         <el-table :data="appointments" highlight-current-row v-loading="listLoading" @selection-change="selsChange"
                   style="width: 100%;">
-            <el-table-column prop="id" label="预约ID" width="100" sortable>
-            </el-table-column>
-            <el-table-column prop="customerName" label="姓名" width="120" sortable>
-            </el-table-column>
-            <el-table-column prop="gender" label="性别" :formatter="formatGender" width="100" sortable>
-            </el-table-column>
-            <el-table-column prop="contactMobile" label="电话" width="140" sortable>
-            </el-table-column>
-            <el-table-column prop="address" label="地址" width="250" sortable>
-            </el-table-column>
-            <el-table-column prop="appointmentDay" label="预约日" :formatter="formatDateLong" width="120" sortable>
-            </el-table-column>
-            <el-table-column prop="hourRange" label="预约时间" width="120" sortable>
-            </el-table-column>
-            <el-table-column prop="status" label="状态" :formatter="formatStatus" width="100" sortable>
-            </el-table-column>
-            <el-table-column label="操作" width="180">
+            <el-table-column prop="id" label="预约ID" width="100" sortable></el-table-column>
+            <el-table-column prop="customerName" label="姓名" width="100" sortable></el-table-column>
+            <el-table-column prop="gender" label="性别" :formatter="formatGender" width="90" sortable></el-table-column>
+            <el-table-column prop="contactMobile" label="电话" width="140" sortable></el-table-column>
+            <el-table-column prop="provinceName" label="省" width="80"></el-table-column>
+            <el-table-column prop="cityName" label="市" width="100"></el-table-column>
+            <el-table-column prop="address" label="详细地址" min-width="220"></el-table-column>
+            <el-table-column prop="appointmentDay" label="预约日" :formatter="formatDateLong" width="120" sortable></el-table-column>
+            <el-table-column prop="hourRange" label="预约时间" width="120" sortable></el-table-column>
+            <el-table-column prop="status" label="状态" :formatter="formatStatus" width="100" sortable></el-table-column>
+            <el-table-column prop="comment" label="备注" width="160" sortable></el-table-column>
+            <el-table-column label="操作" width="250">
                 <template scope="scope">
                     <template v-if="showButton(scope.$index, scope.row)">
                         <el-button type="warning" size="small" @click="markDone(scope.$index, scope.row)">处理</el-button>
+                        <el-button type="primary" size="small" @click="handleAddComment(scope.$index, scope.row)">备注</el-button>
                     </template>
                     <template v-else>
                         <el-button type="success" size="small">已完成</el-button>
@@ -101,7 +97,20 @@
             </el-form>
             <div slot="footer" class="dialog-footer">
                 <el-button @click.native="addFormVisible = false">取消</el-button>
-                <el-button type="primary" @click.native="addSubmit" :loading="addLoading">提交</el-button>
+                <el-button type="primary" @click.native="addAppointmentSubmit" :loading="addLoading">提交</el-button>
+            </div>
+        </el-dialog>
+
+        <!--增加备注页面-->
+        <el-dialog title="修改备注" v-model="addCommentVisible" :close-on-click-modal="false">
+            <el-form :model="addComment" label-width="80px" ref="addComment">
+                <el-form-item label="备注">
+                    <el-input type="textarea" v-model="addComment.comment"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click.native="addFormVisible = false">取消</el-button>
+                <el-button type="primary" @click.native="addCommentSubmit" :loading="addLoading">提交</el-button>
             </div>
         </el-dialog>
 
@@ -111,7 +120,7 @@
 <script>
     import util from '../../common/js/util'
     //import NProgress from 'nprogress'
-    import {searchAppointments, markAppointmentDone, deleteAppointmentById} from '../../api/api';
+    import {searchAppointments, markAppointmentDone, deleteAppointmentById, addCommentOnAppointment} from '../../api/api';
 
     export default {
         data() {
@@ -144,6 +153,13 @@
                         {required: true, message: '请输入姓名', trigger: 'blur'}
                     ]
                 },
+
+                //备注
+                addCommentVisible: false,
+                addComment: {
+                    appointmentId : 0,
+                    comment:''
+                }
             }
         },
         methods: {
@@ -177,6 +193,14 @@
                     startHour :'',
                     endHour:''
                 };
+            },
+            //显示新增界面
+            handleAddComment: function (index, row) {
+                this.addCommentVisible = true;
+                this.addComment = {
+                    appointmentId : row.id,
+                    comment : row.comment
+                }
             },
             //获取用户列表
             getAppointments() {
@@ -260,7 +284,7 @@
                 })
             },
             //新增
-            addSubmit: function () {
+            addAppointmentSubmit: function () {
                 this.$refs.addForm.validate((valid) => {
                     if (valid) {
                         this.$confirm('确认提交吗？', '提示', {}).then(() => {
@@ -269,9 +293,44 @@
                             let para = Object.assign({}, this.addForm);
                             para.appointmentTime = (!para.appointmentTime || para.appointmentTime === '') ? '' : util.formatDate.format(new Date(para.appointmentTime), 'yyyy-MM-dd');
 
-                            console.log("going to submit new appointment", para)
+                            console.log("going to submit new appointment", para);
+                            this.addLoading = false;
+                            this.addFormVisible = false;
                         });
                     }
+                });
+            },
+            //备注
+            addCommentSubmit: function () {
+                this.$refs.addComment.validate(() => {
+                    this.$confirm('确认提交吗？', '提示', {}).then(() => {
+                        this.addLoading = true;
+                        //NProgress.start();
+                        addCommentOnAppointment(this.addComment.appointmentId, this.addComment.comment)
+                            .then((response) => {
+                                let {code, data} = response.data;
+                                console.log("delete appointment got result code" + code);
+
+                                if (code === "SUCCESS") {
+                                    this.$message({
+                                        message: '处理成功',
+                                        type: 'success'
+                                    });
+                                } else {
+                                    this.$message({
+                                        message: '删除失败',
+                                        type: 'failure'
+                                    });
+                                }
+                                this.listLoading = false;
+                                //NProgress.done();
+                                this.getAppointments();
+                            })
+                    });
+
+                    console.log("going to submit comment", this.addComment);
+                    this.addLoading = false;
+                    this.addCommentVisible = false;
                 });
             },
 
