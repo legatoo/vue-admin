@@ -28,6 +28,11 @@ function searchAppointments(param) {
     return axios.post(`http://localhost:9411/api/tob/v1/appointment/search`, param);
 }
 
+function addNewAppointment(param) {
+    console.log("going to add new appointment, param ", param);
+    return axios.post(`http://localhost:9411/api/tob/v1/appointment/add`, param);
+}
+
 function markAppointmentDone(appointmentId) {
     let url = 'http://localhost:9411/api/tob/v1/appointment/markdone?appointmentId=' + appointmentId + '&toStatus=1';
     console.warn("mark done -->", url);
@@ -50,4 +55,12 @@ function backdoor() {
     return axios.get(`http://localhost:9411/backdoor/info`);
 }
 
-export {login, backdoor, searchAppointments, markAppointmentDone, deleteAppointmentById, addCommentOnAppointment}
+export {
+    login,
+    backdoor,
+    searchAppointments,
+    markAppointmentDone,
+    deleteAppointmentById,
+    addCommentOnAppointment,
+    addNewAppointment
+}

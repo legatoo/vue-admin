@@ -4,7 +4,7 @@
         <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
             <el-form :inline="true" :model="filters">
                 <el-form-item>
-                    <el-input v-model="filters.mobile" >
+                    <el-input v-model="filters.mobile">
                         <template slot="prepend">手机</template>
                     </el-input>
                 </el-form-item>
@@ -35,15 +35,17 @@
             <el-table-column prop="provinceName" label="省" width="80"></el-table-column>
             <el-table-column prop="cityName" label="市" width="100"></el-table-column>
             <el-table-column prop="address" label="详细地址" min-width="220"></el-table-column>
-            <el-table-column prop="appointmentDay" label="预约日" :formatter="formatDateLong" width="120" sortable></el-table-column>
-            <el-table-column prop="hourRange" label="预约时间" width="120" sortable></el-table-column>
+            <el-table-column prop="appointmentDay" label="预约日" :formatter="formatDateLong" width="120"
+                             sortable></el-table-column>
+            <el-table-column prop="hourRange" label="预约时间" width="150" sortable></el-table-column>
             <el-table-column prop="status" label="状态" :formatter="formatStatus" width="100" sortable></el-table-column>
             <el-table-column prop="comment" label="备注" width="160" sortable></el-table-column>
             <el-table-column label="操作" width="250">
                 <template scope="scope">
                     <template v-if="showButton(scope.$index, scope.row)">
                         <el-button type="warning" size="small" @click="markDone(scope.$index, scope.row)">处理</el-button>
-                        <el-button type="primary" size="small" @click="handleAddComment(scope.$index, scope.row)">备注</el-button>
+                        <el-button type="primary" size="small" @click="handleAddComment(scope.$index, scope.row)">备注
+                        </el-button>
                     </template>
                     <template v-else>
                         <el-button type="success" size="small">已完成</el-button>
@@ -64,7 +66,7 @@
         <el-dialog title="新增预约单" v-model="addFormVisible" :close-on-click-modal="false">
             <el-form :model="addForm" label-width="80px" :rules="addFormRules" ref="addForm">
                 <el-form-item label="姓名" prop="customerName">
-                    <el-input v-model="addForm.customerName" auto-complete="off"></el-input>
+                    <el-input v-model="addForm.chineseName" auto-complete="off"></el-input>
                 </el-form-item>
                 <el-form-item label="性别">
                     <el-radio-group v-model="addForm.gender">
@@ -73,7 +75,27 @@
                     </el-radio-group>
                 </el-form-item>
                 <el-form-item label="电话">
-                    <el-input v-model="addForm.customerMobile" placeholder="手机或座机"></el-input>
+                    <el-input v-model="addForm.mobile" placeholder="手机或座机"></el-input>
+                </el-form-item>
+                <el-form-item label="省">
+                    <el-select v-model="addForm.provinceId" clearable placeholder="省" @change="clearCityChoose">
+                        <el-option
+                                v-for="item in provinces"
+                                :key="item.provinceId"
+                                :label="item.provinceName"
+                                :value="item.provinceId">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="市">
+                    <el-select v-model="addForm.cityId" clearable placeholder="市">
+                        <el-option
+                                v-for="item in cityMapData[addForm.provinceId]"
+                                :key="item.cityId"
+                                :label="item.cityName"
+                                :value="item.cityId">
+                        </el-option>
+                    </el-select>
                 </el-form-item>
                 <el-form-item label="地址">
                     <el-input type="textarea" v-model="addForm.address"></el-input>
@@ -85,14 +107,17 @@
                 <el-form-item label="预约时间">
                     <el-time-select
                             placeholder="起始时间"
-                            v-model="addForm.startHour"
+                            v-model="addForm.hourBegin"
                             :picker-options="{start: '08:00',step: '00:15',end: '20:00'}">
                     </el-time-select>
                     <el-time-select
                             placeholder="结束时间"
-                            v-model="addForm.endHour"
-                            :picker-options="{start: '08:30',step: '00:15',end: '21:00',minTime: addForm.startHour}">
+                            v-model="addForm.hourEnd"
+                            :picker-options="{start: '08:30',step: '00:15',end: '21:00',minTime: addForm.hourBegin}">
                     </el-time-select>
+                </el-form-item>
+                <el-form-item label="备注">
+                    <el-input type="textarea" v-model="addForm.comment"></el-input>
                 </el-form-item>
             </el-form>
             <div slot="footer" class="dialog-footer">
@@ -120,36 +145,51 @@
 <script>
     import util from '../../common/js/util'
     //import NProgress from 'nprogress'
-    import {searchAppointments, markAppointmentDone, deleteAppointmentById, addCommentOnAppointment} from '../../api/api';
+    import {
+        searchAppointments,
+        markAppointmentDone,
+        deleteAppointmentById,
+        addCommentOnAppointment,
+        addNewAppointment
+    } from '../../api/api';
+    import {provinceList, cityMap} from '../../api/data/city';
+    import ElFormItem from "../../../node_modules/element-ui/packages/form/src/form-item.vue";
+
 
     export default {
+        components: {ElFormItem},
         data() {
             return {
                 filters: {
                     mobile: '',
                     fromDay: '',
-                    toDay:''
+                    toDay: ''
                 },
                 appointments: [],
                 total: 0,
                 page: 1,
                 listLoading: false,
                 sels: [],//列表选中列
+                provinces: provinceList,
+                cityMapData: cityMap,
 
                 addFormVisible: false,//新增界面是否显示
                 addLoading: false,
                 //新增界面数据
                 addForm: {
-                    customerName: '',
+                    chineseName: '',
                     gender: 0,
-                    customerMobile: '',
+                    mobile: '',
+                    provinceId: 620000,
+                    cityId: '',
                     address: '',
                     appointmentDay: '',
-                    startHour :'',
-                    endHour:''
+                    hourBegin: '',
+                    hourEnd: '',
+                    comment: ''
                 },
                 addFormRules: {
-                    customerName: [
+                    chineseName: [
                         {required: true, message: '请输入姓名', trigger: 'blur'}
                     ]
                 },
@@ -157,8 +197,8 @@
                 //备注
                 addCommentVisible: false,
                 addComment: {
-                    appointmentId : 0,
-                    comment:''
+                    appointmentId: 0,
+                    comment: ''
                 }
             }
         },
@@ -185,21 +225,27 @@
             handleAdd: function () {
                 this.addFormVisible = true;
                 this.addForm = {
-                    customerName: '',
+                    chineseName: '',
                     gender: 0,
-                    customerMobile: '',
+                    mobile: '',
+                    provinceId: 620000,
+                    cityId: '',
                     address: '',
                     appointmentDay: '',
-                    startHour :'',
-                    endHour:''
+                    hourBegin: '',
+                    hourEnd: '',
+                    comment: ''
                 };
+            },
+            clearCityChoose: function () {
+                this.addForm.cityId = ''
             },
             //显示新增界面
             handleAddComment: function (index, row) {
                 this.addCommentVisible = true;
                 this.addComment = {
-                    appointmentId : row.id,
-                    comment : row.comment
+                    appointmentId: row.id,
+                    comment: row.comment
                 }
             },
             //获取用户列表
@@ -256,9 +302,9 @@
 
                 });
             },
-            deleteAppoint:function(index, row){
+            deleteAppoint: function (index, row) {
                 this.$confirm('确认删除这条预约单?', '提示', {
-                    type:'warning'
+                    type: 'warning'
                 }).then(() => {
                     this.listLoading = true;
 
@@ -290,12 +336,31 @@
                         this.$confirm('确认提交吗？', '提示', {}).then(() => {
                             this.addLoading = true;
                             //NProgress.start();
+                            let appointmentDate = new Date(this.addForm.appointmentDay);
+                            this.addForm.appointmentDay = appointmentDate.getTime();
                             let para = Object.assign({}, this.addForm);
-                            para.appointmentTime = (!para.appointmentTime || para.appointmentTime === '') ? '' : util.formatDate.format(new Date(para.appointmentTime), 'yyyy-MM-dd');
 
                             console.log("going to submit new appointment", para);
-                            this.addLoading = false;
-                            this.addFormVisible = false;
+                            addNewAppointment(para).then((response) => {
+                                let {code, data} = response.data;
+
+                                if (code === "SUCCESS") {
+                                    console.log("add new appointment" + data);
+                                    this.$message({
+                                        message: '处理成功',
+                                        type: 'success'
+                                    });
+                                } else {
+                                    this.$message({
+                                        message: '删除失败',
+                                        type: 'failure'
+                                    });
+                                }
+                                this.addLoading = false;
+                                this.addFormVisible = false;
+                                //NProgress.done();
+                                this.getAppointments();
+                            });
                         });
                     }
                 });
@@ -323,14 +388,12 @@
                                     });
                                 }
                                 this.listLoading = false;
+                                this.addLoading = false;
+                                this.addCommentVisible = false;
                                 //NProgress.done();
                                 this.getAppointments();
                             })
                     });
-
-                    console.log("going to submit comment", this.addComment);
-                    this.addLoading = false;
-                    this.addCommentVisible = false;
                 });
             },
 
