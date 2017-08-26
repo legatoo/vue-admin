@@ -263,13 +263,14 @@
 
                     if (code !== "SUCCESS") {
                         console.error("got error when querying appointments" + code)
+                    }else{
+                        this.appointments = data;
+                        this.total = length
+                        console.warn("got new appointments --> ", this.appointments);
+                        console.warn("total size --> ", this.total);
                     }
-                    this.appointments = data;
-                    this.total = length;
-                    this.listLoading = false;
 
-                    console.warn("got new appointments --> ", this.appointments);
-                    console.warn("total size --> ", this.total);
+                    this.listLoading = false;
                 });
             },
             //标记处理完成

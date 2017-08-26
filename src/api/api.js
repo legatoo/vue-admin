@@ -1,26 +1,37 @@
 import axios from 'axios';
 
-import {LoginUsers} from './data/user';
+import hmacSHA512 from 'crypto-js/hmac-sha512';
+import Base64 from 'crypto-js/enc-base64';
+
+const nonce = 'YcS6nEyttcp7fSWCcLAT';
 
 function login(username, password) {
-    return new Promise((resolve, reject) => {
-        let user = null;
-        setTimeout(() => {
-            let hasUser = LoginUsers.some(u => {
-                if (u.username === username && u.password === password) {
-                    user = JSON.parse(JSON.stringify(u));
-                    user.password = undefined;
-                    return true;
-                }
-            });
+    console.log("going to login ", username, password);
+    let secret = Base64.stringify(hmacSHA512(password, nonce));
 
-            if (hasUser) {
-                resolve([200, {code: 200, msg: '请求成功', user}]);
-            } else {
-                resolve([200, {code: 500, msg: '账号或密码错误'}]);
-            }
-        }, 1000);
-    }).then(res => res[1]);
+    console.log("origin password ", password);
+    console.log("encrypt to ", secret);
+
+    var postData = {
+        loginName : username,
+        secret : secret
+    }
+    return axios.post('http://localhost:9411/api/tob/v1/systemadmin/verify', postData);
+}
+
+function signup(username, password) {
+    console.log("going to sign up a new user ", username, secret);
+
+    let secret = Base64.stringify(hmacSHA512(password, nonce));
+
+    console.log("origin password ", password);
+    console.log("encrypt to ", secret);
+
+    var postData = {
+        loginName : username,
+        secret : secret
+    }
+    return axios.post('http://localhost:9411/api/tob/v1/systemadmin/add', postData);
 }
 
 function searchAppointments(param) {
@@ -57,6 +68,7 @@ function backdoor() {
 
 export {
     login,
+    signup,
     backdoor,
     searchAppointments,
     markAppointmentDone,

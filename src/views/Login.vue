@@ -1,29 +1,52 @@
 <template>
-    <el-form :model="ruleForm2" :rules="rules2" ref="ruleForm2" label-position="left" label-width="0px"
+    <el-form :model="loginForm" :rules="rules2" ref="loginForm" label-position="left" label-width="0px"
              class="demo-ruleForm login-container">
-        <h3 class="title">系统登录</h3>
-        <el-form-item prop="account">
-            <el-input type="text" v-model="ruleForm2.account" auto-complete="off" placeholder="账号"></el-input>
-        </el-form-item>
-        <el-form-item prop="checkPass">
-            <el-input type="password" v-model="ruleForm2.checkPass" auto-complete="off" placeholder="密码"></el-input>
-        </el-form-item>
-        <el-checkbox v-model="checked" checked class="remember">记住密码</el-checkbox>
-        <el-form-item style="width:100%;">
-            <el-button type="primary" style="width:100%;" @click.native.prevent="handleSubmit2" :loading="logining">登录
-            </el-button>
-        </el-form-item>
+        <h3 class="title">大洋门窗系统后台</h3>
+
+        <el-tabs v-model="activeName" @tab-click="handleClick">
+            <el-tab-pane label="员工登录" name="first">
+                <el-form-item prop="account">
+                    <el-input type="text" v-model="loginForm.account" auto-complete="off" placeholder="账号"></el-input>
+                </el-form-item>
+                <el-form-item prop="checkPass">
+                    <el-input type="password" v-model="loginForm.checkPass" auto-complete="off"
+                              placeholder="密码"></el-input>
+                </el-form-item>
+                <el-checkbox v-model="checked" checked class="remember">记住密码</el-checkbox>
+                <el-form-item style="width:100%;">
+                    <el-button type="primary" style="width:100%;" @click.native.prevent="handleLogin"
+                               :loading="logining">登录
+                    </el-button>
+                </el-form-item>
+            </el-tab-pane>
+            <el-tab-pane label="员工注册" name="second">
+                <el-form-item prop="account">
+                    <el-input type="text" v-model="loginForm.account" auto-complete="off" placeholder="账号"></el-input>
+                </el-form-item>
+                <el-form-item prop="checkPass">
+                    <el-input type="password" v-model="loginForm.checkPass" auto-complete="off"
+                              placeholder="密码"></el-input>
+                </el-form-item>
+                <el-form-item style="width:100%;">
+                    <el-button type="primary" style="width:100%;" @click.native.prevent="handlesignup"
+                               :loading="logining">注册
+                    </el-button>
+                </el-form-item>
+            </el-tab-pane>
+        </el-tabs>
+        <h3 class="title"></h3>
     </el-form>
 </template>
 
 <script>
-    import { login } from '../api/api';
+    import {login, signup} from '../api/api';
     //import NProgress from 'nprogress'
     export default {
         data() {
             return {
                 logining: false,
-                ruleForm2: {
+                activeName: 'first',
+                loginForm: {
                     account: '',
                     checkPass: ''
                 },
@@ -41,42 +64,85 @@
             };
         },
         methods: {
-            handleSubmit2(ev) {
+            handleClick(tab, event) {
+                console.log(tab, event);
+            },
+
+            handleLogin(ev) {
                 var _this = this;
-                this.$refs.ruleForm2.validate((valid) => {
+                this.$refs.loginForm.validate((valid) => {
                     if (valid) {
                         //_this.$router.replace('/table');
                         this.logining = true;
                         //NProgress.start();
-                        let username = this.ruleForm2.account;
-                        let password = this.ruleForm2.checkPass;
-                        login(username, password).then(data => {
-                            try{
-                                this.logining = false;
-                                //NProgress.done();
-                                let {msg, code, user} = data;
-                                if (code !== 200) {
-                                    this.$message({
-                                        message: msg,
-                                        type: 'error'
-                                    });
-                                } else {
-                                    sessionStorage.setItem('user', JSON.stringify(user));
-                                    this.$router.push({path: '/table'});
-                                }
-                            }catch (error){
-                                console.error(data)
-                            }
+                        let username = this.loginForm.account;
+                        let password = this.loginForm.checkPass;
 
-                        }).catch(error => {});
+                        login(username, password).then(response => {
+                            let {code, data} = response.data;
+                            if (code === "SUCCESS") {
+                                let user = {
+                                    id: data.id,
+                                    username: data.loginName,
+                                    avatar: '../../static/img/user.png',
+                                    name: data.loginName
+                                };
+
+                                sessionStorage.setItem('user', JSON.stringify(user));
+                                this.$router.push({path: '/table'});
+                            } else {
+                                this.$message({
+                                    message: '账号或密码错误',
+                                    type: 'error'
+                                });
+                                this.logining = false;
+                            }
+                        }).catch(error => {
+                            console.log('error submit!!', error);
+                        })
                     } else {
                         console.log('error submit!!');
                         return false;
                     }
                 });
+            },
+
+            handlesignup(ev) {
+                var _this = this;
+                this.$refs.loginForm.validate((valid) => {
+                    if (valid) {
+                        //NProgress.start();
+                        let username = this.loginForm.account;
+                        let password = this.loginForm.checkPass;
+
+                        signup(username, password).then(response => {
+                            let {code, data} = response.data;
+
+                            if (code === "SUCCESS") {
+                                this.$message({
+                                    message: '注册成功',
+                                    type: 'success'
+                                });
+                                this.activeName = 'first'
+                            } else {
+                                this.$message({
+                                    message: '处理失败',
+                                    type: 'failure'
+                                });
+                            }
+                        }).catch(error => {
+                            console.log('error submit!!', error);
+                        })
+                    }else{
+                        console.log("sign up form validation failed")
+                        return false;
+                    }
+                })
             }
+
         }
     }
+
 
 </script>
 
