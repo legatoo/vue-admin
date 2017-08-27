@@ -29,10 +29,14 @@ function signup(username, password) {
     console.log("encrypt to ", secret);
 
     var postData = {
-        loginName : username,
-        secret : secret
+        loginName: username,
+        secret: secret
     }
     return axios.post('http://localhost:9411/api/toc/v1/systemadmin/add', postData);
+}
+
+function activateSystemAdmin(systemAdminId){
+    return axios.post('http://localhost:9411/api/tob/v1/systemadmin/active?adminId' + systemAdminId, null, {withCredentials:true});
 }
 
 function searchAppointments(param) {
@@ -75,5 +79,6 @@ export {
     markAppointmentDone,
     deleteAppointmentById,
     addCommentOnAppointment,
-    addNewAppointment
+    addNewAppointment,
+    activateSystemAdmin
 }

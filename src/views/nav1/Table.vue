@@ -271,6 +271,11 @@
                     }
 
                     this.listLoading = false;
+                }).catch((error) => {
+                    let statusCode = error.response.status;
+                    if(statusCode === 403){
+                        this.$router.push({path: '/login'});
+                    }
                 });
             },
             //标记处理完成
@@ -281,7 +286,7 @@
                     this.listLoading = true;
                     //NProgress.start();
                     markAppointmentDone(row.id).then((response) => {
-                        let {code, data} = response.data;
+                       let {code, data} = response.data;
                         console.log("mark appointment done got result code" + code);
 
                         if (code === "SUCCESS") {
@@ -299,8 +304,11 @@
                         //NProgress.done();
                         this.getAppointments();
                     });
-                }).catch(() => {
-
+                }).catch((error) => {
+                    let statusCode = error.response.status;
+                    if(statusCode === 403){
+                        this.$router.push({path: '/login'});
+                    }
                 });
             },
             deleteAppoint: function (index, row) {
@@ -327,7 +335,12 @@
                         this.listLoading = false;
                         //NProgress.done();
                         this.getAppointments();
-                    })
+                    }).catch((error) => {
+                        let statusCode = error.response.status;
+                        if(statusCode === 403){
+                            this.$router.push({path: '/login'});
+                        }
+                    });
                 })
             },
             //新增
@@ -361,6 +374,11 @@
                                 this.addFormVisible = false;
                                 //NProgress.done();
                                 this.getAppointments();
+                            }).catch((error) => {
+                                let statusCode = error.response.status;
+                                if(statusCode === 403){
+                                    this.$router.push({path: '/login'});
+                                }
                             });
                         });
                     }
@@ -393,7 +411,12 @@
                                 this.addCommentVisible = false;
                                 //NProgress.done();
                                 this.getAppointments();
-                            })
+                            }).catch((error) => {
+                            let statusCode = error.response.status;
+                            if(statusCode === 403){
+                                this.$router.push({path: '/login'});
+                            }
+                        });
                     });
                 });
             },

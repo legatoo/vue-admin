@@ -29,6 +29,15 @@ let routes = [
         ]
     },
     {
+        path: '/',
+        component: Home,
+        name: '客户管理',
+        iconCls: 'el-icon-message',//图标样式class
+        children: [
+            //{ path: '/customer', component: Table, name: '客户信息' }
+        ]
+    },
+    {
         path: '*',
         hidden: true,
         redirect: { path: '/404' }
