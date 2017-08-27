@@ -80,9 +80,8 @@
                         let password = this.loginForm.checkPass;
 
                         login(username, password).then(response => {
+                            let status = response.status;
                             let {code, data} = response.data;
-                            let cookie = response.headers["set-cookie"];
-                            console.log("cookie --->  ", cookie);
                             if (code === "SUCCESS") {
                                 let user = {
                                     id: data.id,
@@ -92,7 +91,6 @@
                                 };
 
                                 sessionStorage.setItem('user', JSON.stringify(user));
-
                                 this.$router.push({path: '/table'});
                             } else {
                                 this.$message({
