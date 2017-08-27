@@ -40,6 +40,7 @@
 
 <script>
     import {login, signup} from '../api/api';
+
     //import NProgress from 'nprogress'
     export default {
         data() {
@@ -80,6 +81,8 @@
 
                         login(username, password).then(response => {
                             let {code, data} = response.data;
+                            let cookie = response.headers["set-cookie"];
+                            console.log("cookie --->  ", cookie);
                             if (code === "SUCCESS") {
                                 let user = {
                                     id: data.id,
@@ -89,6 +92,7 @@
                                 };
 
                                 sessionStorage.setItem('user', JSON.stringify(user));
+
                                 this.$router.push({path: '/table'});
                             } else {
                                 this.$message({
@@ -99,6 +103,7 @@
                             }
                         }).catch(error => {
                             console.log('error submit!!', error);
+                            this.logining = false;
                         })
                     } else {
                         console.log('error submit!!');

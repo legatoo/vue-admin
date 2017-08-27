@@ -15,8 +15,9 @@ function login(username, password) {
     var postData = {
         loginName : username,
         secret : secret
-    }
-    return axios.post('http://localhost:9411/api/tob/v1/systemadmin/verify', postData);
+    };
+
+    return axios.post('http://localhost:9411/api/tob/v1/systemadmin/verify', postData, {withCredentials:true});
 }
 
 function signup(username, password) {
