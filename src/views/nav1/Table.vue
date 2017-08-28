@@ -28,18 +28,17 @@
         <!--列表-->
         <el-table :data="appointments" highlight-current-row v-loading="listLoading" @selection-change="selsChange"
                   style="width: 100%;">
-            <el-table-column prop="id" label="预约ID" width="100" sortable></el-table-column>
-            <el-table-column prop="customerName" label="姓名" width="100" sortable></el-table-column>
-            <el-table-column prop="gender" label="性别" :formatter="formatGender" width="90" sortable></el-table-column>
-            <el-table-column prop="contactMobile" label="电话" width="140" sortable></el-table-column>
+            <el-table-column prop="customerName" label="姓名" width="80" sortable></el-table-column>
+            <el-table-column prop="gender" label="性别" :formatter="formatGender" width="80" sortable></el-table-column>
+            <el-table-column prop="contactMobile" label="电话" width="120" sortable></el-table-column>
             <el-table-column prop="provinceName" label="省" width="80"></el-table-column>
             <el-table-column prop="cityName" label="市" width="100"></el-table-column>
-            <el-table-column prop="address" label="详细地址" min-width="220"></el-table-column>
+            <el-table-column prop="address" label="详细地址" width="180"></el-table-column>
             <el-table-column prop="appointmentDay" label="预约日" :formatter="formatDateLong" width="120"
                              sortable></el-table-column>
-            <el-table-column prop="hourRange" label="预约时间" width="150" sortable></el-table-column>
+            <el-table-column prop="hourRange" label="预约时间" width="120" sortable></el-table-column>
             <el-table-column prop="status" label="状态" :formatter="formatStatus" width="100" sortable></el-table-column>
-            <el-table-column prop="comment" label="备注" width="160" sortable></el-table-column>
+            <el-table-column prop="comment" label="备注" width="120" sortable></el-table-column>
             <el-table-column label="操作" width="250">
                 <template scope="scope">
                     <template v-if="showButton(scope.$index, scope.row)">
