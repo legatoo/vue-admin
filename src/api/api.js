@@ -5,6 +5,8 @@ import Base64 from 'crypto-js/enc-base64';
 
 const nonce = 'YcS6nEyttcp7fSWCcLAT';
 
+var root = process.env.API_ROOT;
+
 function login(username, password) {
     console.log("going to login ", username, password);
     let secret = Base64.stringify(hmacSHA512(password, nonce));
@@ -17,7 +19,7 @@ function login(username, password) {
         secret : secret
     };
 
-    return axios.post('http://localhost:9411/api/toc/v1/systemadmin/verify', postData, {withCredentials:true});
+    return axios.post(root + '/api/toc/v1/systemadmin/verify', postData, {withCredentials:true});
 }
 
 function signup(username, password) {
@@ -32,48 +34,48 @@ function signup(username, password) {
         loginName: username,
         secret: secret
     }
-    return axios.post('http://localhost:9411/api/toc/v1/systemadmin/add', postData);
+    return axios.post(root + '/api/toc/v1/systemadmin/add', postData);
 }
 
 function activateSystemAdmin(systemAdminId){
-    return axios.post('http://localhost:9411/api/tob/v1/systemadmin/active?adminId' + systemAdminId, null, {withCredentials:true});
+    return axios.post(root + '/api/tob/v1/systemadmin/active?adminId' + systemAdminId, null, {withCredentials:true});
 }
 
 function searchAppointments(param) {
     console.log("going to query appointments, param ", param);
-    return axios.post(`http://localhost:9411/api/tob/v1/appointment/search`, param, {withCredentials:true});
+    return axios.post(root + `/api/tob/v1/appointment/search`, param, {withCredentials:true});
 }
 
 function searchCustomer(param) {
     console.log("going to query customer, param ", param);
-    return axios.post(`http://localhost:9411/api/tob/v1/customer/search`, param, {withCredentials:true});
+    return axios.post(root + `/api/tob/v1/customer/search`, param, {withCredentials:true});
 }
 
 function addNewAppointment(param) {
     console.log("going to add new appointment, param ", param);
-    return axios.post(`http://localhost:9411/api/tob/v1/appointment/add`, param, {withCredentials:true});
+    return axios.post(root + `/api/tob/v1/appointment/add`, param, {withCredentials:true});
 }
 
 function markAppointmentDone(appointmentId) {
-    let url = 'http://localhost:9411/api/tob/v1/appointment/markdone?appointmentId=' + appointmentId + '&toStatus=1';
+    let url = root + '/api/tob/v1/appointment/markdone?appointmentId=' + appointmentId + '&toStatus=1';
     console.warn("mark done -->", url);
     return axios.post(url, null, {withCredentials:true});
 }
 
 function deleteAppointmentById(appointmentId) {
-    let url = 'http://localhost:9411/api/tob/v1/appointment/delete?appointmentId=' + appointmentId;
+    let url = root + '/api/tob/v1/appointment/delete?appointmentId=' + appointmentId;
     console.warn("delete done -->", url);
     return axios.post(url, null, {withCredentials:true});
 }
 
 function addCommentOnAppointment(appointmentId, comment) {
-    let url = 'http://localhost:9411/api/tob/v1/appointment/addcomment?appointmentId=' + appointmentId + "&comment=" + comment;
+    let url = root + '/api/tob/v1/appointment/addcomment?appointmentId=' + appointmentId + "&comment=" + comment;
     console.warn("add comment done -->", url);
     return axios.post(url, null, {withCredentials:true});
 }
 
 function backdoor() {
-    return axios.get(`http://localhost:9411/backdoor/info`);
+    return axios.get(root + `/backdoor/info`);
 }
 
 export {
