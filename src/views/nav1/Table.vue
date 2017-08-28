@@ -274,6 +274,7 @@
                 }).catch((error) => {
                     let statusCode = error.response.status;
                     if(statusCode === 403){
+                        sessionStorage.removeItem('user');
                         this.$router.push({path: '/login'});
                     }
                 });
@@ -307,6 +308,7 @@
                 }).catch((error) => {
                     let statusCode = error.response.status;
                     if(statusCode === 403){
+                        sessionStorage.removeItem('user');
                         this.$router.push({path: '/login'});
                     }
                 });
@@ -338,6 +340,7 @@
                     }).catch((error) => {
                         let statusCode = error.response.status;
                         if(statusCode === 403){
+                            sessionStorage.removeItem('user');
                             this.$router.push({path: '/login'});
                         }
                     });
@@ -377,6 +380,7 @@
                             }).catch((error) => {
                                 let statusCode = error.response.status;
                                 if(statusCode === 403){
+                                    sessionStorage.removeItem('user');
                                     this.$router.push({path: '/login'});
                                 }
                             });
@@ -414,6 +418,7 @@
                             }).catch((error) => {
                             let statusCode = error.response.status;
                             if(statusCode === 403){
+                                sessionStorage.removeItem('user');
                                 this.$router.push({path: '/login'});
                             }
                         });

@@ -44,6 +44,11 @@ function searchAppointments(param) {
     return axios.post(`http://localhost:9411/api/tob/v1/appointment/search`, param, {withCredentials:true});
 }
 
+function searchCustomer(param) {
+    console.log("going to query customer, param ", param);
+    return axios.post(`http://localhost:9411/api/tob/v1/customer/search`, param, {withCredentials:true});
+}
+
 function addNewAppointment(param) {
     console.log("going to add new appointment, param ", param);
     return axios.post(`http://localhost:9411/api/tob/v1/appointment/add`, param, {withCredentials:true});
@@ -80,5 +85,6 @@ export {
     deleteAppointmentById,
     addCommentOnAppointment,
     addNewAppointment,
-    activateSystemAdmin
+    activateSystemAdmin,
+    searchCustomer
 }

@@ -3,6 +3,7 @@ import NotFound from './views/404.vue'
 import Home from './views/Home.vue'
 import Main from './views/Main.vue'
 import Table from './views/nav1/Table.vue'
+import Customer from './views/nav2/Customer.vue'
 
 let routes = [
     {
@@ -34,7 +35,7 @@ let routes = [
         name: '客户管理',
         iconCls: 'el-icon-message',//图标样式class
         children: [
-            //{ path: '/customer', component: Table, name: '客户信息' }
+            { path: '/customer', component: Customer, name: '客户信息' }
         ]
     },
     {
